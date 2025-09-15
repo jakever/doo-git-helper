@@ -193,6 +193,10 @@ const localBranches = computed(() =>
   gitStore.branches.filter(branch => !branch.remote)
 )
 
+const remoteBranches = computed(() => 
+gitStore.branches.filter(branch => branch.remote)
+  )
+
 const allBranches = computed(() => gitStore.branches)
 
 // 方法

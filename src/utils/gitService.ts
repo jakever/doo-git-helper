@@ -1,7 +1,9 @@
+import { simpleGit, SimpleGit } from 'simple-git'
 import type { CommitInfo, BranchInfo } from '@/types'
 import { useSettingsStore } from '@/stores/settings'
 
 export class GitService {
+  private git: SimpleGit
   private settingsStore = useSettingsStore()
 
   constructor() {
@@ -9,25 +11,45 @@ export class GitService {
     if (!repoPath) {
       throw new Error('请先设置仓库路径')
     }
-    
-    // 检查是否在 Electron 环境中
-    if (!window.electronAPI) {
-      throw new Error('GitService 只能在 Electron 环境中使用')
-    }
-  }
-
-  private get repoPath(): string {
-    return this.settingsStore.repositoryPath
+    this.git = simpleGit(repoPath)
   }
 
   // 获取所有分支
   async getBranches(): Promise<BranchInfo[]> {
     try {
-      const result = await window.electronAPI.git.getBranches(this.repoPath)
-      if (!result.success) {
-        throw new Error(result.error || '获取分支失败')
-      }
-      return result.data
+      const branchSummary = await this.git.branch()
+      const branches: BranchInfo[] = []
+
+      // 本地分支
+      Object.keys(branchSummary.branches).forEach(branchName => {
+        const branch = branchSummary.branches[branchName]
+        branches.push({
+          name: branch.name,
+          current: branch.current,
+          remote: false
+        })
+      })
+
+      // 远程分支
+      const remoteBranches = await this.git.branch(['-r'])
+      Object.keys(remoteBranches.branches).forEach(branchName => {
+        const branch = remoteBranches.branches[branchName]
+        // 过滤掉 HEAD 引用
+        if (!branch.name.includes('HEAD')) {
+          const localName = branch.name.replace('origin/', '')
+          // 检查是否已存在本地分支
+          const exists = branches.some(b => b.name === localName)
+          if (!exists) {
+            branches.push({
+              name: localName,
+              current: false,
+              remote: true
+            })
+          }
+        }
+      })
+
+      return branches
     } catch (error) {
       console.error('获取分支失败:', error)
       throw error
@@ -37,15 +59,18 @@ export class GitService {
   // 获取提交记录
   async getCommits(branchName: string, limit: number = 100): Promise<CommitInfo[]> {
     try {
-      const result = await window.electronAPI.git.getCommits({
-        repoPath: this.repoPath,
-        branchName,
-        limit
+      const log = await this.git.log({
+        from: branchName,
+        maxCount: limit
       })
-      if (!result.success) {
-        throw new Error(result.error || '获取提交记录失败')
-      }
-      return result.data
+
+      return log.all.map(commit => ({
+        hash: commit.hash,
+        message: commit.message,
+        author: commit.author_name,
+        date: commit.date,
+        timestamp: new Date(commit.date).getTime()
+      }))
     } catch (error) {
       console.error('获取提交记录失败:', error)
       throw error
@@ -55,15 +80,19 @@ export class GitService {
   // 获取分支差异
   async getBranchDiff(currentBranch: string, targetBranch: string): Promise<CommitInfo[]> {
     try {
-      const result = await window.electronAPI.git.getBranchDiff({
-        repoPath: this.repoPath,
-        currentBranch,
-        targetBranch
+      // 获取当前分支中不存在于目标分支的提交
+      const log = await this.git.log({
+        from: targetBranch,
+        to: currentBranch
       })
-      if (!result.success) {
-        throw new Error(result.error || '获取分支差异失败')
-      }
-      return result.data
+
+      return log.all.map(commit => ({
+        hash: commit.hash,
+        message: commit.message,
+        author: commit.author_name,
+        date: commit.date,
+        timestamp: new Date(commit.date).getTime()
+      }))
     } catch (error) {
       console.error('获取分支差异失败:', error)
       throw error
@@ -73,13 +102,7 @@ export class GitService {
   // 切换分支
   async checkoutBranch(branchName: string): Promise<void> {
     try {
-      const result = await window.electronAPI.git.checkoutBranch({
-        repoPath: this.repoPath,
-        branchName
-      })
-      if (!result.success) {
-        throw new Error(result.error || '切换分支失败')
-      }
+      await this.git.checkout(branchName)
     } catch (error) {
       console.error('切换分支失败:', error)
       throw error
@@ -89,13 +112,7 @@ export class GitService {
   // Cherry Pick 提交
   async cherryPick(commitHash: string): Promise<void> {
     try {
-      const result = await window.electronAPI.git.cherryPick({
-        repoPath: this.repoPath,
-        commitHash
-      })
-      if (!result.success) {
-        throw new Error(result.error || 'Cherry Pick 失败')
-      }
+      await this.git.raw(['cherry-pick', commitHash])
     } catch (error) {
       console.error('Cherry Pick 失败:', error)
       throw error
@@ -105,11 +122,8 @@ export class GitService {
   // 获取当前分支
   async getCurrentBranch(): Promise<string> {
     try {
-      const result = await window.electronAPI.git.getCurrentBranch(this.repoPath)
-      if (!result.success) {
-        throw new Error(result.error || '获取当前分支失败')
-      }
-      return result.data || ''
+      const status = await this.git.status()
+      return status.current || ''
     } catch (error) {
       console.error('获取当前分支失败:', error)
       throw error
@@ -119,11 +133,7 @@ export class GitService {
   // 检查仓库状态
   async getStatus(): Promise<any> {
     try {
-      const result = await window.electronAPI.git.getStatus(this.repoPath)
-      if (!result.success) {
-        throw new Error(result.error || '获取仓库状态失败')
-      }
-      return result.data
+      return await this.git.status()
     } catch (error) {
       console.error('获取仓库状态失败:', error)
       throw error
@@ -133,10 +143,7 @@ export class GitService {
   // 拉取远程更新
   async pull(): Promise<void> {
     try {
-      const result = await window.electronAPI.git.pull(this.repoPath)
-      if (!result.success) {
-        throw new Error(result.error || '拉取远程更新失败')
-      }
+      await this.git.pull()
     } catch (error) {
       console.error('拉取远程更新失败:', error)
       throw error
@@ -146,11 +153,8 @@ export class GitService {
   // 获取远程仓库信息
   async getRemoteInfo(): Promise<any> {
     try {
-      const result = await window.electronAPI.git.getRemoteInfo(this.repoPath)
-      if (!result.success) {
-        throw new Error(result.error || '获取远程仓库信息失败')
-      }
-      return result.data
+      const remotes = await this.git.getRemotes(true)
+      return remotes
     } catch (error) {
       console.error('获取远程仓库信息失败:', error)
       throw error

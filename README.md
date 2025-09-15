@@ -17,7 +17,7 @@
 
 ## 技术栈
 
-- 前端框架: Vue 3 + Vite + TypeScript
+- 前端框架: Vue 3 + Webpack5 + TypeScript
 - UI 组件库: Element Plus
 - 状态管理: Pinia
 - 桌面应用: Electron
@@ -66,7 +66,10 @@ npm run build
 
 ## 开发计划
 
-- [ ] 添加 Electron 桌面应用支持
-- [ ] 优化文件选择对话框
+- [ ] 支持撤回某个提交
+- [ ] 支持批量撤回多个提交
+- [ ] 支持配置Vue模板代码
+- [ ] 支持Vue模板应用到本地项目
+- [ ] 支持AI生成模板代码
 - [ ] 添加更多 Git 操作功能
 - [ ] 支持多仓库管理

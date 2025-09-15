@@ -5,9 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GitLab 版本管理工具</title>
+    <script>
+      // 定义全局变量
+      window.global = window.globalThis || window;
+      if (typeof global === 'undefined') {
+        window.global = window;
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
+    <!-- Webpack 会自动注入脚本，不需要手动引用 -->
   </body>
 </html>

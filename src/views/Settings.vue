@@ -3,13 +3,13 @@
     <el-card class="settings-card">
       <template #header>
         <div class="card-header">
-          <span>仓库设置</span>
+          <span>系统设置</span>
         </div>
       </template>
 
       <el-form :model="form" label-width="120px" class="settings-form">
-        <el-form-item label="选择git仓库根目录">
-          <div class="repository-selector">
+        <el-form-item label="仓库路径">
+          <div class="repository-input-group">
             <el-input
               v-model="form.repositoryPath"
               placeholder="请选择 Git 仓库根目录"
@@ -33,7 +33,7 @@
             show-password
           />
           <div class="form-tip">
-            用于访问 GitLab API，获取仓库信息
+            用于访问 GitLab API，获取项目信息和提交详情
           </div>
         </el-form-item>
 
@@ -41,15 +41,11 @@
           <el-button type="primary" @click="saveSettings" :loading="saving">
             保存设置
           </el-button>
-          <el-button @click="resetSettings">
-            重置
-          </el-button>
-          <el-button type="success" @click="testConnection" :loading="testing">
+          <el-button @click="testConnection" :loading="testing">
             测试连接
           </el-button>
         </el-form-item>
       </el-form>
-
       <el-divider />
 
       <div class="settings-info">
@@ -83,16 +79,15 @@ const form = reactive({
 // 选择仓库
 const selectRepository = async () => {
   try {
-    // 检查是否在 Electron 环境中
-    if (window.electronAPI?.selectFolder) {
-      // 使用 Electron 的文件选择对话框
-      const selectedPath = await window.electronAPI.selectFolder()
-      if (selectedPath) {
-        form.repositoryPath = selectedPath
-      }
+    // 直接使用 Electron 的 IPC 通信
+    const { ipcRenderer } = require('electron')
+    const selectedPath = await ipcRenderer.invoke('select-folder')
+    if (selectedPath) {
+      form.repositoryPath = selectedPath
     }
   } catch (error) {
-    // 用户取消
+    // 用户取消或出错
+    console.log('选择文件夹被取消或出错:', error)
   }
 }
 
@@ -115,24 +110,15 @@ const saveSettings = async () => {
   }
 }
 
-// 重置设置
-const resetSettings = () => {
-  form.repositoryPath = ''
-  form.gitlabToken = ''
-  settingsStore.resetSettings()
-  ElMessage.success('设置已重置')
-}
-
 // 测试连接
 const testConnection = async () => {
   if (!form.repositoryPath) {
-    ElMessage.warning('请先设置仓库路径')
+    ElMessage.warning('请先选择仓库路径')
     return
   }
 
   testing.value = true
   try {
-    // 临时更新设置以测试连接
     const originalPath = settingsStore.repositoryPath
     settingsStore.updateRepositoryPath(form.repositoryPath)
     
@@ -143,17 +129,20 @@ const testConnection = async () => {
     
     ElMessage.success(`连接成功！当前分支: ${currentBranch}，共 ${branches.length} 个分支`)
     
-    // 恢复原始设置
-    settingsStore.updateRepositoryPath(originalPath)
+    // 恢复原始路径
+    if (originalPath) {
+      settingsStore.updateRepositoryPath(originalPath)
+    }
   } catch (error) {
-    ElMessage.error(`连接失败: ${error.message || '请检查仓库路径是否为有效的 Git 仓库'}`)
+    ElMessage.error(`连接失败: ${error.message}`)
   } finally {
     testing.value = false
   }
 }
 
-// 初始化表单
+// 加载设置
 onMounted(() => {
+  settingsStore.loadSettings()
   form.repositoryPath = settingsStore.repositoryPath
   form.gitlabToken = settingsStore.gitlabToken
 })
@@ -161,21 +150,28 @@ onMounted(() => {
 
 <style scoped>
 .settings-container {
+  padding: 20px;
   max-width: 800px;
   margin: 0 auto;
 }
 
 .settings-card {
-  margin-bottom: 20px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-size: 18px;
+  font-weight: bold;
 }
 
-.repository-selector {
+.settings-form {
+  margin-top: 20px;
+}
+
+.repository-input-group {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -189,6 +185,15 @@ onMounted(() => {
   font-size: 12px;
   color: #909399;
   margin-top: 5px;
+  line-height: 1.4;
+}
+
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.el-button {
+  margin-right: 10px;
 }
 
 .settings-info {

@@ -171,6 +171,22 @@ export const useGitStore = defineStore('git', () => {
     selectedCommits.value = []
   }
 
+  const pullLatest = async () => {
+    try {
+      const gitService = new GitService()
+      await gitService.pull()
+      ElMessage.success('拉取最新代码成功')
+      // 重新加载分支和提交
+      await loadBranches()
+      if (currentBranch.value) {
+        await loadCommits(currentBranch.value)
+      }
+    } catch (error) {
+      ElMessage.error('拉取最新代码失败')
+      throw error
+    }
+  }
+
   return {
     // 状态
     currentBranch,
@@ -195,6 +211,7 @@ export const useGitStore = defineStore('git', () => {
     updatePagination,
     toggleCommitSelection,
     selectAllCommits,
-    clearSelection
+    clearSelection,
+    pullLatest
   }
 })

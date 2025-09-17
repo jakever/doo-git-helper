@@ -8,7 +8,7 @@ module.exports = {
   entry: './src/main.ts',
   target: 'electron-renderer',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist/web'),
     filename: 'assets/[name].[contenthash].js',
     clean: true,
     publicPath: '/',

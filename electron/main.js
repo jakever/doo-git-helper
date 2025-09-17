@@ -16,18 +16,19 @@ function createWindow() {
       contextIsolation: false, // 允许指定的预加载脚本
       enableRemoteModule: false, // 允许在渲染进程中使用 remote 模块
     },
-    icon: path.join(__dirname, '../public/vite.svg'),
+    icon: path.join(__dirname, '../build/icons/icon.icns'),
     title: 'GitLab 版本管理工具'
   })
 
   // 加载应用
-  // if (isDev) {
+  if (isDev) {
     mainWindow.loadURL('http://localhost:5174') // 修改为 webpack 的端口
     // 开发环境下打开开发者工具
     mainWindow.webContents.openDevTools()
-  // } else {
-    // mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
-  // }
+  } else {
+    console.log('当前目：', path.join(__dirname, '../dist/'))
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+  }
 
   // 当窗口被关闭时触发
   mainWindow.on('closed', () => {

@@ -4,7 +4,6 @@ export interface CommitInfo {
   message: string
   author: string
   date: string
-  timestamp: number
 }
 
 // 分支信息类型
@@ -18,7 +17,6 @@ export interface BranchInfo {
 export interface RepositorySettings {
   repositoryPath: string
   gitlabToken: string
-  defaultRepository: string
 }
 
 // 搜索条件类型

@@ -6,13 +6,11 @@ export const useSettingsStore = defineStore('settings', () => {
   // 状态
   const repositoryPath = ref('')
   const gitlabToken = ref('')
-  const defaultRepository = ref('https://git.finpoints.tech/p-dpe-jeepay/lesspay2-manager-fe')
 
   // 计算属性
   const settings = computed<RepositorySettings>(() => ({
     repositoryPath: repositoryPath.value,
-    gitlabToken: gitlabToken.value,
-    defaultRepository: defaultRepository.value
+    gitlabToken: gitlabToken.value
   }))
 
   // 方法
@@ -29,8 +27,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const saveSettings = () => {
     const settingsData = {
       repositoryPath: repositoryPath.value,
-      gitlabToken: gitlabToken.value,
-      defaultRepository: defaultRepository.value
+      gitlabToken: gitlabToken.value
     }
     localStorage.setItem('git-helper-settings', JSON.stringify(settingsData))
   }
@@ -42,7 +39,6 @@ export const useSettingsStore = defineStore('settings', () => {
         const settingsData = JSON.parse(saved)
         repositoryPath.value = settingsData.repositoryPath || ''
         gitlabToken.value = settingsData.gitlabToken || ''
-        defaultRepository.value = settingsData.defaultRepository || defaultRepository.value
       }
     } catch (error) {
       console.error('加载设置失败:', error)
@@ -52,14 +48,12 @@ export const useSettingsStore = defineStore('settings', () => {
   const resetSettings = () => {
     repositoryPath.value = ''
     gitlabToken.value = ''
-    defaultRepository.value = 'https://git.finpoints.tech/p-dpe-jeepay/lesspay2-manager-fe'
     localStorage.removeItem('git-helper-settings')
   }
 
   return {
     repositoryPath,
     gitlabToken,
-    defaultRepository,
     settings,
     updateRepositoryPath,
     updateGitlabToken,

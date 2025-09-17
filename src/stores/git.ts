@@ -8,14 +8,14 @@ export const useGitStore = defineStore('git', () => {
   // 状态
   const currentBranch = ref('')
   const targetBranch = ref('')
-  const branches = ref<BranchInfo[]>([])
+  const branches = ref<BranchInfo[]>([]) // 所有分支
   const commits = ref<CommitInfo[]>([])
   const selectedCommits = ref<string[]>([])
   const loading = ref(false)
   const searchConditions = ref<SearchConditions>({})
   const pagination = ref<PaginationInfo>({
     current: 1,
-    pageSize: 20,
+    pageSize: 50,
     total: 0
   })
 
@@ -99,7 +99,7 @@ export const useGitStore = defineStore('git', () => {
       loading.value = true
       const gitService = new GitService()
       const diffCommits = await gitService.getBranchDiff(currentBranch.value, targetBranch.value)
-      commits.value = diffCommits
+      commits.value = diffCommits.sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime())
       pagination.value.total = diffCommits.length
       pagination.value.current = 1
       selectedCommits.value = []
@@ -116,13 +116,20 @@ export const useGitStore = defineStore('git', () => {
       ElMessage.warning('请选择要 Cherry Pick 的提交')
       return
     }
+    const gitService = new GitService()
+    const isClean = await gitService.isCleanConfirm()
+    if (!isClean) {
+      ElMessage.warning('暂存区不干净，请先提交所有改动！')
+      return
+    }
 
     try {
       loading.value = true
-      const gitService = new GitService()
       
       // 切换到目标分支
-      await gitService.checkoutBranch(targetBranch.value)
+      const targetBranchName = targetBranch.value.replace('remotes/origin/', '')
+      await gitService.checkoutBranch(targetBranchName)
+      await gitService.getReset(targetBranchName)
       
       // 批量 Cherry Pick
       for (const commitHash of selectedCommits.value) {
@@ -131,9 +138,6 @@ export const useGitStore = defineStore('git', () => {
       
       ElMessage.success(`成功 Cherry Pick ${selectedCommits.value.length} 个提交`)
       selectedCommits.value = []
-      
-      // 重新加载提交记录
-      await loadCommits(targetBranch.value)
     } catch (error) {
       console.error('Cherry Pick 失败:', error)
       ElMessage.error('Cherry Pick 失败')
@@ -161,14 +165,6 @@ export const useGitStore = defineStore('git', () => {
     } else {
       selectedCommits.value.push(commitHash)
     }
-  }
-
-  const selectAllCommits = () => {
-    selectedCommits.value = filteredCommits.value.map(commit => commit.hash)
-  }
-
-  const clearSelection = () => {
-    selectedCommits.value = []
   }
 
   const pullLatest = async () => {
@@ -210,8 +206,6 @@ export const useGitStore = defineStore('git', () => {
     updateSearchConditions,
     updatePagination,
     toggleCommitSelection,
-    selectAllCommits,
-    clearSelection,
     pullLatest
   }
 })

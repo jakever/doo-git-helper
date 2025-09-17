@@ -38,7 +38,7 @@
             style="width: 200px"
           >
             <el-option
-              v-for="branch in allBranches"
+              v-for="branch in remoteBranches"
               :key="branch.name"
               :label="branch.name"
               :value="branch.name"
@@ -102,15 +102,8 @@
           <span>提交记录</span>
           <div class="header-actions">
             <el-button
-              type="warning"
-              @click="gitStore.selectAllCommits"
-              :disabled="gitStore.filteredCommits.length === 0"
-            >
-              全选
-            </el-button>
-            <el-button
               type="info"
-              @click="gitStore.clearSelection"
+              @click="tableRef.clearSelection()"
               :disabled="!gitStore.hasSelectedCommits"
             >
               清空选择
@@ -128,6 +121,7 @@
       </template>
 
       <el-table
+        ref="tableRef"
         :data="gitStore.filteredCommits"
         v-loading="gitStore.loading"
         @selection-change="handleSelectionChange"
@@ -174,13 +168,13 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useGitStore } from '@/stores/git'
 import { useSettingsStore } from '@/stores/settings'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox, ElTable } from 'element-plus'
 import { Refresh, Search, Delete } from '@element-plus/icons-vue'
-import { GitService } from '@/utils/gitService'
 import type { SearchConditions } from '@/types'
 
 const gitStore = useGitStore()
 const settingsStore = useSettingsStore()
+const tableRef = ref<InstanceType<typeof ElTable>>()
 
 const searchForm = reactive<SearchConditions>({
   author: '',
@@ -193,19 +187,19 @@ const localBranches = computed(() =>
   gitStore.branches.filter(branch => !branch.remote)
 )
 
-const remoteBranches = computed(() => 
-gitStore.branches.filter(branch => branch.remote)
-  )
-
-const allBranches = computed(() => gitStore.branches)
+const remoteBranches = computed(() =>
+  gitStore.branches.filter(branch => branch.remote)
+    .filter(item =>
+      !item.name.includes('feature'))
+)
 
 // 方法
 const refreshBranches = async () => {
   try {
-    await gitStore.loadBranches()
-    ElMessage.success('分支列表已刷新')
+    await init()
+    ElMessage.success('列表已刷新')
   } catch (error) {
-    ElMessage.error('刷新分支失败')
+    ElMessage.error('刷新失败')
   }
 }
 
@@ -255,6 +249,7 @@ const cherryPickSelected = async () => {
     )
     
     await gitStore.cherryPickCommits()
+    tableRef.value?.clearSelection()
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('Cherry Pick 操作失败')
@@ -275,29 +270,27 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('zh-CN')
 }
 
-// 初始化
-onMounted(async () => {
+const init = async () => {
   if (!settingsStore.repositoryPath) {
     ElMessage.warning('请先在设置页面配置仓库路径')
     return
   }
-
+  
   try {
     // 加载分支列表
     await gitStore.loadBranches()
     
-    // 自动获取并设置当前分支
-    const gitService = new GitService()
-    const currentBranch = await gitService.getCurrentBranch()
-    if (currentBranch) {
-      gitStore.currentBranch = currentBranch
+    if (gitStore.currentBranch) {
       // 加载当前分支的提交记录
-      await gitStore.loadCommits(currentBranch)
+      await gitStore.loadCommits(gitStore.currentBranch)
     }
-  } catch (error) {
+  } catch (error: any) {
     ElMessage.error(`初始化失败: ${error.message || '请检查仓库配置'}`)
   }
-})
+}
+
+// 初始化
+onMounted(init)
 </script>
 
 <style scoped>

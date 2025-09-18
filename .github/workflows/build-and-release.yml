@@ -12,7 +12,7 @@ jobs:
     
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, windows-latest]
         
     steps:
     - name: Checkout code
@@ -71,18 +71,16 @@ jobs:
           ## 更新内容
           
           - 自动构建的 Electron 应用
-          - 支持 macOS、Windows、Linux 平台
+          - 支持 macOS、Windows 平台
           
           ## 下载说明
           
           请根据您的操作系统下载对应的安装包：
           - macOS: `.dmg` 文件
-          - Windows: `.exe` 文件  
-          - Linux: `.AppImage` 文件
+          - Windows: `.exe` 文件
         files: |
           artifacts/electron-app-macos-latest/**/*
           artifacts/electron-app-windows-latest/**/*
-          artifacts/electron-app-ubuntu-latest/**/*
         draft: false
         prerelease: false
       env:

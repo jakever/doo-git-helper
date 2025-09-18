@@ -30,26 +30,26 @@ jobs:
     - name: Build web assets
       run: yarn build:web
 
-    - name: 查看dist文件列表
-      run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          dir ./dist/web
-        else
-          ls -la ./dist/web
-        fi
+    # - name: 查看dist文件列表
+    #   run: |
+    #     if [[ "$RUNNER_OS" == "Windows" ]]; then
+    #       dir ./dist/web
+    #     else
+    #       ls -la ./dist/web
+    #     fi
 
     - name: Build Electron app
       run: yarn build:electron
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: 查看构建产物
-      run: |
-        if [[ "$RUNNER_OS" == "Windows" ]]; then
-          dir ./dist/electron/
-        else
-          ls -la ./dist/electron/
-        fi
+    # - name: 查看构建产物
+    #   run: |
+    #     if [[ "$RUNNER_OS" == "Windows" ]]; then
+    #       dir ./dist/electron/
+    #     else
+    #       ls -la ./dist/electron/
+    #     fi
         
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

@@ -31,15 +31,18 @@ jobs:
       run: yarn build:web
 
     - name: 查看dist文件列表
-      run: ls ./dist/web
+      run: ls -la ./dist/web
+
+    - name: 查看electron文件列表
+      run: ls -la ./electron/
 
     - name: Build Electron app
       run: yarn build:electron
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: 查看dist文件列表
-      run: ls ./dist/electron
+    - name: 查看构建产物
+      run: ls -la ./dist/electron/
         
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

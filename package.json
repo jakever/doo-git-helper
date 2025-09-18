@@ -35,7 +35,15 @@
     },
     "npmRebuild": false,
     "files": [
-      "dist/web/**/*"
+      "dist/web/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/",
+        "to": "electron/"
+      }
     ],
     "dmg": {
       "artifactName": "${productName}-${version}.${ext}",

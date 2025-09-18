@@ -28,12 +28,18 @@ jobs:
       run: yarn install --frozen-lockfile
       
     - name: Build web assets
-      run: yarn build
-      
+      run: yarn build:web
+
+    - name: 查看dist文件列表
+      run: ls ./dist/web
+
     - name: Build Electron app
-      run: yarn electron:build
+      run: yarn build:electron
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: 查看dist文件列表
+      run: ls ./dist/electron
         
     - name: Upload artifacts
       uses: actions/upload-artifact@v4

@@ -1,6 +1,8 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron')
 const path = require('path')
-const isDev = process.env.NODE_ENV === 'development'
+
+// 检测开发环境的方法
+const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
 
 let mainWindow
 
@@ -19,15 +21,15 @@ function createWindow() {
     icon: path.join(__dirname, '../build/icons/icon.icns'),
     title: 'GitLab 版本管理工具'
   })
-
+  
   // 加载应用
   if (isDev) {
     mainWindow.loadURL('http://localhost:5174') // 修改为 webpack 的端口
     // 开发环境下打开开发者工具
     mainWindow.webContents.openDevTools()
   } else {
-    console.log('当前目：', path.join(__dirname, '../dist/'))
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    console.log('当前目：', path.join(__dirname, '../dist/web/'))
+    mainWindow.loadFile(path.join(__dirname, '../dist/web/index.html'))
   }
 
   // 当窗口被关闭时触发

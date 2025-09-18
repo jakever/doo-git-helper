@@ -12,8 +12,8 @@
 - **批量 Cherry Pick**: 批量勾选进行 Cherry Pick 操作
 
 ### 设置页面
-- **仓库选择**: 选择 Git 仓库路径
-- **Token 配置**: 设置 GitLab Access Token
+- **仓库选择**: 选择 Git 项目根目录
+- **Token 配置**: 设置 GitLab Access Token（目前暂时不需要）
 
 ## 技术栈
 
@@ -33,24 +33,39 @@
 
 1. 安装依赖
 ```bash
-npm install
+yarn install
+```
+_注意：如果安装依赖报“certificate has expired”之类的错，请先执行如下命令：_
+
+```bash
+yarn config set electron_mirror https://npmmirror.com/mirrors/electron/
 ```
 
-2. 启动开发服务器
+2. 启动Electron开发服务器
 ```bash
-npm run dev
+yarn dev
+```
+
+3. 启动Web开发服务器
+```bash
+yarn dev:web
+```
+
+3. 构建Electron项目
+```bash
+yarn build
 ```
 
 3. 构建项目
 ```bash
-npm run build
+yarn build:web
 ```
 
 ## 使用说明
 
 1. 首次使用需要在设置页面配置：
    - 选择本地 Git 仓库路径
-   - 设置 GitLab Access Token
+   - 设置 GitLab Access Token（目前暂时不需要）
 
 2. 在主页面：
    - 选择当前分支和目标分支

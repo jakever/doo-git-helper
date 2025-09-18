@@ -4,12 +4,12 @@
   "description": "GitLab 版本管理工具",
   "main": "electron/main.js",
   "scripts": {
-    "dev": "webpack serve --config webpack.config.js",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5174 && electron .\"",
-    "build": "npm run build:web && npm run build:electron",
+    "dev": "concurrently \"yarn dev:web\" \"wait-on http://localhost:5174 && cross-env NODE_ENV=development electron .\"",
+    "dev:web": "webpack serve --config webpack.config.js",
+    "build": "yarn build:web && yarn build:electron",
     "build:web": "webpack --config webpack.prod.js",
     "build:electron": "electron-builder",
-    "pack:electron": "npm run build:web && electron-builder --dir",
+    "pack:electron": "yarn build:web && electron-builder --dir",
     "preview": "webpack serve --config webpack.prod.js"
   },
   "keywords": [
@@ -80,6 +80,7 @@
   "devDependencies": {
     "@types/node": "^20.0.0",
     "concurrently": "^8.2.2",
+    "cross-env": "^10.0.0",
     "css-loader": "^6.8.1",
     "electron": "^38.0.0",
     "electron-builder": "^26.0.12",

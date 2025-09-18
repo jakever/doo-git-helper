@@ -53,8 +53,13 @@ module.exports = {
     }),
     new webpack.DefinePlugin({
       'global': 'globalThis',
-      'process.env': JSON.stringify(process.env),
-      'process.env.ELECTRON': '"true"' // 标记为 Electron 环境
+      'process.env': JSON.stringify({
+        ...process.env,
+        NODE_ENV: '"production"'
+      }),
+      'process.env.ELECTRON': '"true"', // 标记为 Electron 环境
+      '__VUE_OPTIONS_API__': 'true',
+      '__VUE_PROD_DEVTOOLS__': 'false'
     }),
     new webpack.ProvidePlugin({
       global: 'globalThis'

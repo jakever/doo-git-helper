@@ -26,8 +26,7 @@
     "publish": [
       {
         "provider": "github",
-        "private": true,
-        "token": "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"
+        "private": true
       }
     ],
     "directories": {

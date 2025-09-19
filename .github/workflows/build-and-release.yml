@@ -73,6 +73,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         path: artifacts
+
+    - name: List artifacts for debugging
+      run: |
+        echo "=== Artifacts structure ==="
+        find artifacts -type f -name "*.dmg" -o -name "*.exe" -o -name "*.zip" | head -10
+        echo "=== All files ==="
+        find artifacts -type f | head -20
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -91,9 +98,12 @@ jobs:
           - macOS: `.dmg` 文件
           - Windows: `.exe` 文件
         files: |
-          artifacts/electron-app-macos-latest/**/*
-          artifacts/electron-app-windows-latest/**/*
+          artifacts/electron-app-macos-latest/*.dmg
+          artifacts/electron-app-macos-latest/*.zip
+          artifacts/electron-app-windows-latest/*.exe
+          artifacts/electron-app-windows-latest/*.zip
         draft: false
         prerelease: false
+        overwrite: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

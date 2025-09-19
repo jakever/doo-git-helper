@@ -6,6 +6,10 @@ on:
       - 'v*'  # 当推送以 v 开头的标签时触发
   workflow_dispatch:  # 允许手动触发
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -40,8 +44,6 @@ jobs:
 
     - name: Build Electron app
       run: yarn build:electron
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # - name: 查看构建产物
     #   run: |

@@ -24,12 +24,7 @@
   "build": {
     "productName": "doo-git-helper",
     "appId": "com.doo.helper",
-    "publish": [
-      {
-        "provider": "github",
-        "private": true
-      }
-    ],
+    "publish": null,
     "directories": {
       "output": "dist/electron"
     },
